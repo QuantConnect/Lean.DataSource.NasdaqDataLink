@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>QuantConnect.DataSource</RootNamespace>
+    <DocumentationFile>$(OutputPath)\QuantConnect.DataSource.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QuantConnect.Common" Version="2.5.11800" />
+    <PackageReference Include="protobuf-net" Version="3.0.29" />
+    <PackageReference Include="protobuf-net.Core" Version="3.0.29" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
+    <Compile Remove="Demonstration.cs" />
+    <None Remove=".gitignore" />
+    <None Remove="process.sample.ipynb" />
+    <None Remove="process.sample.py" />
+    <None Remove="process.sample.sh" />
+  </ItemGroup>
+
+</Project>
