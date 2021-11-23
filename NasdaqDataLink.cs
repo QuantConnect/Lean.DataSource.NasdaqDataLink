@@ -121,13 +121,8 @@ namespace QuantConnect.DataSource
                 data.SetProperty(_propertyNames[i], value);
             }
 
-            // Let's set Value to be the second column
-            data.Value = (decimal)data.GetProperty(_propertyNames[1]);
-            
-            /*
-            // We can also set Value property as a `close` property by
+            // Let's set Value to be the set column
             data.Value = (decimal)data.GetProperty(_valueColumn);
-            */
 
             return data;
         }
