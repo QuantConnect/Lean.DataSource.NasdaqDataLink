@@ -68,6 +68,15 @@ namespace QuantConnect.DataLibrary.Tests
 
             AssertAreEqual(expected, result);
         }
+        
+        [Test]
+        public void QuandlIdentical()
+        {
+            var new_ = CreateNewInstance();
+            var old_ = CreateQuandlInstance();
+
+            AssertAreEqual(new_, old_);
+        }
 
         private void AssertAreEqual(object expected, object result, bool filterByCustomAttributes = false)
         {
@@ -88,6 +97,17 @@ namespace QuantConnect.DataLibrary.Tests
         private BaseData CreateNewInstance()
         {
             return new NasdaqDataLink
+            {
+                Symbol = Symbol.Create("UMICH/SOC1", 0, "empty"),
+                Time = new DateTime(2021, 9, 30),
+                DataType = MarketDataType.Base,
+                Value = 72.8m
+            };
+        }
+
+        private BaseData CreateQuandlInstance()
+        {
+            return new Quandl
             {
                 Symbol = Symbol.Create("UMICH/SOC1", 0, "empty"),
                 Time = new DateTime(2021, 9, 30),
