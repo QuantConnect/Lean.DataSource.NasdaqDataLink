@@ -19,9 +19,6 @@
     <None Remove="tests\**" />
     <Compile Remove="Demonstration.cs" />
     <None Remove=".gitignore" />
-    <None Remove="process.sample.ipynb" />
-    <None Remove="process.sample.py" />
-    <None Remove="process.sample.sh" />
   </ItemGroup>
 
 </Project>
