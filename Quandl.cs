@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.DataSource;
 
 namespace QuantConnect.Data.Custom
 {
