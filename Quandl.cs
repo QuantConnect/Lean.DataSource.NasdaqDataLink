@@ -14,9 +14,8 @@
 */
 
 using System;
-using QuantConnect.DataSource;
 
-namespace QuantConnect.Data.Custom
+namespace QuantConnect.DataSource
 {
     /// <summary>
     /// Quandl Data Type (Depreciated, Use NasdaqDataLink instead.)
