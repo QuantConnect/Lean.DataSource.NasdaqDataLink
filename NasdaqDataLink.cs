@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.Net;
 using NodaTime;
@@ -104,7 +105,7 @@ namespace QuantConnect.DataSource
                 _isInitialized = true;
                 foreach (var propertyName in csv)
                 {
-                    var property = propertyName.Trim();     // Trim white space in property's name
+                    var property = propertyName.Trim().ToLowerInvariant();
                     data.SetProperty(property, 0m);
                     _propertyNames.Add(property);
                 }
@@ -123,9 +124,9 @@ namespace QuantConnect.DataSource
             
             // Check if the data is price data
             var priceKey = new List<string> {"close", "price", "settle", "value"};
-            var commonList = _propertyNames.Intersect(priceKey).Any();
+            var commonList = _propertyNames.Intersect(priceKey).ToList();
             
-            if (commonList)
+            if (commonList.Any())
             {
                 // If so, set .Value as the first common element with price keyword
                 data.Value = (decimal)data.GetProperty(commonList[0]);
