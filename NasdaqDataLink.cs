@@ -120,9 +120,16 @@ namespace QuantConnect.DataSource
                 var value = csv[i].ToDecimal();
                 data.SetProperty(_propertyNames[i], value);
             }
-
-            // Let's set Value to be the set column
-            data.Value = (decimal)data.GetProperty(_valueColumn);
+            
+            // Check if the data is price data
+            var priceKey = new List<string> {"close", "price", "settle", "value"};
+            var commonList = _propertyNames.Intersect(priceKey).Any();
+            
+            if (commonList)
+            {
+                // If so, set .Value as the first common element with price keyword
+                data.Value = (decimal)data.GetProperty(commonList[0]);
+            }
 
             return data;
         }
