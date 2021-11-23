@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>QuantConnect.DataSource</RootNamespace>
+    <RootNamespace>QuantConnect.DataSource.NasdaqDataLink</RootNamespace>
+    <RootNamespace>QuantConnect.Data.Custom.Quandl</RootNamespace>
     <DocumentationFile>$(OutputPath)\QuantConnect.DataSource.xml</DocumentationFile>
   </PropertyGroup>
 
