@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ using QuantConnect.DataSource;
 namespace QuantConnect.DataLibrary.Tests
 {
     [TestFixture]
-    public class MyCustomDataTypeTests
+    public class NasdaqDataLinkTests
     {
         [Test]
         public void JsonRoundTrip()
@@ -87,12 +87,12 @@ namespace QuantConnect.DataLibrary.Tests
 
         private BaseData CreateNewInstance()
         {
-            return new MyCustomDataType
+            return new NasdaqDataLink
             {
-                Symbol = Symbol.Empty,
-                Time = DateTime.Today,
+                Symbol = Symbol.Create("UMICH/SOC1", 0, "empty"),
+                Time = new DateTime(2021, 9, 30),
                 DataType = MarketDataType.Base,
-                SomeCustomProperty = "This is some market related information"
+                Value = 72.8m
             };
         }
     }
