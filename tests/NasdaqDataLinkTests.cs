@@ -68,7 +68,7 @@ namespace QuantConnect.DataLibrary.Tests
 
             AssertAreEqual(expected, result);
         }
-        
+
         [Test]
         public void QuandlIdentical()
         {
@@ -76,6 +76,19 @@ namespace QuantConnect.DataLibrary.Tests
             var old_ = CreateQuandlInstance();
 
             AssertAreEqual(new_, old_);
+        }
+
+        [Test]
+        public void ValueColumn()
+        {
+            var newInstance = new NasdaqDataLink();
+
+            newInstance.SetValueColumn("Index");
+            var expected = newInstance.GetValueColumn();
+
+            var result = "index";
+
+            AssertAreEqual(expected, result);
         }
 
         private void AssertAreEqual(object expected, object result, bool filterByCustomAttributes = false)
