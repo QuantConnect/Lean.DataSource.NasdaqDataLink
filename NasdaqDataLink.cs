@@ -169,7 +169,6 @@ namespace QuantConnect.DataSource
             if (string.IsNullOrWhiteSpace(valueColumn)) return;
 
             _valueColumn = valueColumn.Trim().ToLowerInvariant();
-            IsAuthCodeSet = true;
         }
 
         /// <summary>
