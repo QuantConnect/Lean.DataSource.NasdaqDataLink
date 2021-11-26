@@ -34,7 +34,7 @@ namespace QuantConnect.DataSource
     {
         private bool _isInitialized;
         private readonly List<string> _propertyNames = new List<string>();
-        private readonly string _valueColumn;
+        private string _valueColumn;
         private static string _authCode = "your_api_key";
 
         /// <summary>
@@ -57,19 +57,23 @@ namespace QuantConnect.DataSource
         }
         
         /// <summary>
-        /// Default NasdaqDataLink constructor uses Close as its value column
+        /// Flag indicating whether or not the Nasdaq Data Link auth code has been set yet
         /// </summary>
-        public NasdaqDataLink() : this("Close")
+        public string GetValueColumn()
         {
+            if (string.IsNullOrEmpty(_valueColumn))
+            {
+                return _valueColumn;
+            }
+            return "";
         }
-
+        
         /// <summary>
-        /// Constructor for creating customized NasdaqDataLink instance which doesn't use "Close" as its value item.
+        /// Default NasdaqDataLink constructor uses null as its value column
         /// </summary>
-        /// <param name="valueColumnName"></param>
-        protected NasdaqDataLink(string valueColumnName)
+        public NasdaqDataLink()
         {
-            _valueColumn = valueColumnName;
+            _valueColumn = null;
         }
 
         /// <summary>
@@ -89,8 +93,8 @@ namespace QuantConnect.DataSource
         /// Parses the data from the line provided and loads it into LEAN
         /// </summary>
         /// <param name="config">Subscription configuration</param>
-        /// <param name="line">Line of data</param>
-        /// <param name="date">Date</param>
+        /// <param name="line">CSV line of data from the souce</param>
+        /// <param name="date">Date of the requested line</param>
         /// <param name="isLiveMode">Is live mode</param>
         /// <returns>New instance</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
@@ -114,7 +118,7 @@ namespace QuantConnect.DataSource
             }
 
             data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            data.EndTime = data.Time + TimeSpan.FromDays(1);
+            data.EndTime = data.Time + config.Resolution.ToTimeSpan();
 
             for (var i = 1; i < csv.Length; i++)
             {
@@ -122,13 +126,22 @@ namespace QuantConnect.DataSource
                 data.SetProperty(_propertyNames[i], value);
             }
             
-            // Check if the data is price data
-            var priceKey = new List<string> {"close", "price", "settle", "value"};
-            var commonList = _propertyNames.Intersect(priceKey).ToList();
+            // Setting the Value attribute
+            var keywords = new List<string> ();
+            if (string.IsNullOrEmpty(_valueColumn))
+            {
+                keywords.Add(_valueColumn);
+            } 
+            else
+            {
+                // Default keywords for pricing data columns
+                keywords.AddRange(new List<string> {"close", "price", "settle", "value"});
+            }
+            var commonList = _propertyNames.Intersect(keywords).ToList();
             
             if (commonList.Any())
             {
-                // If so, set .Value as the first common element with price keyword
+                // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
                 data.Value = (decimal)data.GetProperty(commonList[0]);
             }
 
@@ -146,14 +159,17 @@ namespace QuantConnect.DataSource
             _authCode = authCode;
             IsAuthCodeSet = true;
         }
-
+        
         /// <summary>
-        /// Indicates whether the data source is tied to an underlying symbol and requires that corporate events be applied to it as well, such as renames and delistings
+        /// Set a column from the Nasdaq Data Link set as the Value attribute.
         /// </summary>
-        /// <returns>false</returns>
-        public override bool RequiresMapping()
+        /// <param name="valueColumn"></param>
+        public void SetValueColumn(string valueColumn)
         {
-            return false;
+            if (string.IsNullOrWhiteSpace(valueColumn)) return;
+
+            _valueColumn = valueColumn.Trim().ToLowerInvariant();
+            IsAuthCodeSet = true;
         }
 
         /// <summary>
@@ -179,7 +195,7 @@ namespace QuantConnect.DataSource
         /// </summary>
         public override List<Resolution> SupportedResolutions()
         {
-            return DailyResolution;
+            return AllResolutions;
         }
 
         /// <summary>
