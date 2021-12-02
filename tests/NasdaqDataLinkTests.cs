@@ -81,14 +81,18 @@ namespace QuantConnect.DataLibrary.Tests
         [Test]
         public void ValueColumn()
         {
-            var newInstance = new NasdaqDataLink();
+            const int expected = 999;
 
-            newInstance.SetValueColumn("Index");
-            var expected = newInstance.GetValueColumn();
+            var newInstance = new IndexNasdaqDataLink();
 
-            var result = "index";
+            var symbol = Symbol.Create("UMICH/SOC1", 0, "empty");
+            var config = new SubscriptionDataConfig(typeof(IndexNasdaqDataLink), symbol,
+                Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
 
-            AssertAreEqual(expected, result);
+            newInstance.Reader(config, "date,open,high,low,close,transactions,index", DateTime.UtcNow, false);
+            newInstance.Reader(config, $"2021-12-02,100,101,100,101,1000,{expected}", DateTime.UtcNow, false);
+
+            AssertAreEqual(expected, newInstance.Value);
         }
 
         private void AssertAreEqual(object expected, object result, bool filterByCustomAttributes = false)
@@ -127,6 +131,13 @@ namespace QuantConnect.DataLibrary.Tests
                 DataType = MarketDataType.Base,
                 Value = 72.8m
             };
+        }
+
+        public class IndexNasdaqDataLink : NasdaqDataLink
+        {
+            public IndexNasdaqDataLink() : base("index")
+            {
+            }
         }
     }
 }

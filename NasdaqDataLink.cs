@@ -14,15 +14,14 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Globalization;
-using System.Net;
 using NodaTime;
 using ProtoBuf;
-using System.IO;
 using QuantConnect.Data;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net;
 
 namespace QuantConnect.DataSource
 {
@@ -32,10 +31,12 @@ namespace QuantConnect.DataSource
     [ProtoContract(SkipConstructor = true)]
     public class NasdaqDataLink : DynamicData
     {
+        private static string _authCode = "your_api_key";
         private bool _isInitialized;
         private readonly List<string> _propertyNames = new List<string>();
-        private string _valueColumn;
-        private static string _authCode = "your_api_key";
+
+        // The NasdaqDataLink will use one of these column names if they are available and another option is not provided
+        private readonly List<string> _keywords = new List<string> { "close", "price", "settle", "value" };
 
         /// <summary>
         /// Static constructor for the <see cref="NasdaqDataLink"/> class
@@ -46,7 +47,28 @@ namespace QuantConnect.DataSource
             // NET 4.5.2 and below does not enable this more secure protocol by default, so we add it in here
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
-        
+
+        /// <summary>
+        /// Default <see cref="NasdaqDataLink"/> constructor uses Close as its value column
+        /// </summary>
+        public NasdaqDataLink() : this("Close")
+        { 
+        }
+
+        /// <summary>
+        /// Constructor for creating customized <see cref="NasdaqDataLink"/> instance which doesn't use close, price, settle or value as its value item.
+        /// </summary>
+        /// <param name="valueColumnName">The name of the column we want to use as reference, the Value property</param>
+        protected NasdaqDataLink(string valueColumnName)
+        {
+            valueColumnName = valueColumnName.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(valueColumnName)) return;
+
+            // Insert the value column name at the beginning of the keywords list
+            _keywords.Insert(0, valueColumnName);
+        }
+
         /// <summary>
         /// Flag indicating whether or not the Nasdaq Data Link auth code has been set yet
         /// </summary>
@@ -54,26 +76,6 @@ namespace QuantConnect.DataSource
         {
             get;
             private set;
-        }
-        
-        /// <summary>
-        /// Flag indicating whether or not the Nasdaq Data Link auth code has been set yet
-        /// </summary>
-        public string GetValueColumn()
-        {
-            if (string.IsNullOrEmpty(_valueColumn))
-            {
-                return _valueColumn;
-            }
-            return "";
-        }
-        
-        /// <summary>
-        /// Default NasdaqDataLink constructor uses null as its value column
-        /// </summary>
-        public NasdaqDataLink()
-        {
-            _valueColumn = null;
         }
 
         /// <summary>
@@ -118,31 +120,20 @@ namespace QuantConnect.DataSource
             }
 
             data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            data.EndTime = data.Time + config.Resolution.ToTimeSpan();
+            data.EndTime = data.Time.Add(config.Resolution.ToTimeSpan());
 
             for (var i = 1; i < csv.Length; i++)
             {
                 var value = csv[i].ToDecimal();
                 data.SetProperty(_propertyNames[i], value);
             }
+
+            var valueColumnName = _propertyNames.Intersect(_keywords).FirstOrDefault();
             
-            // Setting the Value attribute
-            var keywords = new List<string> ();
-            if (string.IsNullOrEmpty(_valueColumn))
-            {
-                keywords.Add(_valueColumn);
-            } 
-            else
-            {
-                // Default keywords for pricing data columns
-                keywords.AddRange(new List<string> {"close", "price", "settle", "value"});
-            }
-            var commonList = _propertyNames.Intersect(keywords).ToList();
-            
-            if (commonList.Any())
+            if (valueColumnName != null)
             {
                 // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
-                data.Value = (decimal)data.GetProperty(commonList[0]);
+                data.Value = (decimal)data.GetProperty(valueColumnName);
             }
 
             return data;
@@ -160,17 +151,6 @@ namespace QuantConnect.DataSource
             IsAuthCodeSet = true;
         }
         
-        /// <summary>
-        /// Set a column from the Nasdaq Data Link set as the Value attribute.
-        /// </summary>
-        /// <param name="valueColumn"></param>
-        public void SetValueColumn(string valueColumn)
-        {
-            if (string.IsNullOrWhiteSpace(valueColumn)) return;
-
-            _valueColumn = valueColumn.Trim().ToLowerInvariant();
-        }
-
         /// <summary>
         /// Indicates whether the data is sparse.
         /// If true, we disable logging for missing files

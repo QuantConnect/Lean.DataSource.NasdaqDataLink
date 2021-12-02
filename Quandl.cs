@@ -18,15 +18,25 @@ using System;
 namespace QuantConnect.DataSource
 {
     /// <summary>
-    /// Quandl Data Type (Depreciated, Use NasdaqDataLink instead.)
+    /// Quandl Data Type (Deprecated, Use NasdaqDataLink instead.)
     /// </summary>
     [ObsoleteAttribute("Quandl is obsolete. Use NasdaqDataLink instead.", false)]
     public class Quandl : NasdaqDataLink
     {
         /// <summary>
-        /// Default quandl constructor
+        /// Default <see cref="Quandl"/> constructor uses Close as its value column
         /// </summary>
-        public Quandl()
+        [ObsoleteAttribute("Quandl is obsolete. Use NasdaqDataLink instead.", false)]
+        public Quandl() : base()
+        {
+        }
+
+        /// <summary>
+        /// Constructor for creating customized <see cref="Quandl"/> instance which doesn't use close, price, settle or value as its value item.
+        /// </summary>
+        /// <param name="valueColumnName">The name of the column we want to use as reference, the Value property</param>
+        [ObsoleteAttribute("Quandl is obsolete. Use NasdaqDataLink instead.", false)]
+        protected Quandl(string valueColumnName) : base(valueColumnName)
         {
         }
     }
