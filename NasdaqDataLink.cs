@@ -120,7 +120,6 @@ namespace QuantConnect.DataSource
             }
 
             data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            data.EndTime = data.Time.Add(config.Resolution.ToTimeSpan());
 
             for (var i = 1; i < csv.Length; i++)
             {
@@ -128,12 +127,22 @@ namespace QuantConnect.DataSource
                 data.SetProperty(_propertyNames[i], value);
             }
 
-            var valueColumnName = _propertyNames.Intersect(_keywords).FirstOrDefault();
+            var potentialValueColumns = _propertyNames.Intersect(_keywords);
             
-            if (valueColumnName != null)
+            if (potentialValueColumns != null)
             {
-                // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
-                data.Value = (decimal)data.GetProperty(valueColumnName);
+                // First try to use the value column name inserted by the user
+                // NOTE: The first element in potentialValueColumns is not necessary the first element
+                //       in _keywords
+                if (potentialValueColumns.Contains(_keywords.First()))
+                {
+                    data.Value = (decimal)data.GetProperty(_keywords.First());
+                }
+                else
+                {
+                    // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
+                    data.Value = (decimal)data.GetProperty(potentialValueColumns.FirstOrDefault());
+                }                
             }
 
             return data;
@@ -150,7 +159,7 @@ namespace QuantConnect.DataSource
             _authCode = authCode;
             IsAuthCodeSet = true;
         }
-        
+
         /// <summary>
         /// Indicates whether the data is sparse.
         /// If true, we disable logging for missing files
@@ -184,6 +193,24 @@ namespace QuantConnect.DataSource
         public override DateTimeZone DataTimeZone()
         {
             return DateTimeZone.Utc;
+        }
+
+        /// <summary>
+        /// The end time of this data. Some data covers spans (trade bars) and as such we want
+        /// to know the entire time span covered
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get { return Time + Period; }
+            set { Time = value - Period; }
+        }
+
+        /// <summary>
+        /// Gets a time span of one day
+        /// </summary>
+        public TimeSpan Period
+        {
+            get { return QuantConnect.Time.OneDay; }
         }
     }
 }
