@@ -131,6 +131,7 @@ namespace QuantConnect.DataSource
             
             if (valueColumnName != null)
             {
+                // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
                 data.Value = (decimal)data.GetProperty(valueColumnName);
             }
 
