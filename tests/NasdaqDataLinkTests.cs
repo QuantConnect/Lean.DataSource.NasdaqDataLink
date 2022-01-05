@@ -90,9 +90,9 @@ namespace QuantConnect.DataLibrary.Tests
                 Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
 
             newInstance.Reader(config, "date,open,high,low,close,transactions,index", DateTime.UtcNow, false);
-            newInstance.Reader(config, $"2021-12-02,100,101,100,101,1000,{expected}", DateTime.UtcNow, false);
+            var data = newInstance.Reader(config, $"2021-12-02,100,101,100,101,1000,{expected}", DateTime.UtcNow, false);
 
-            AssertAreEqual(expected, newInstance.Value);
+            Assert.AreEqual(expected, data.Value);
         }
 
         private void AssertAreEqual(object expected, object result, bool filterByCustomAttributes = false)
