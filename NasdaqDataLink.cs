@@ -127,22 +127,11 @@ namespace QuantConnect.DataSource
                 data.SetProperty(_propertyNames[i], value);
             }
 
-            var potentialValueColumns = _propertyNames.Intersect(_keywords);
+            var valueColumnName = _keywords.Intersect(_propertyNames).FirstOrDefault();
             
-            if (potentialValueColumns != null)
+            if (valueColumnName != null)
             {
-                // First try to use the value column name inserted by the user
-                // NOTE: The first element in potentialValueColumns is not necessary the first element
-                //       in _keywords
-                if (potentialValueColumns.Contains(_keywords.First()))
-                {
-                    data.Value = (decimal)data.GetProperty(_keywords.First());
-                }
-                else
-                {
-                    // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
-                    data.Value = (decimal)data.GetProperty(potentialValueColumns.FirstOrDefault());
-                }                
+                data.Value = (decimal)data.GetProperty(valueColumnName);
             }
 
             return data;
