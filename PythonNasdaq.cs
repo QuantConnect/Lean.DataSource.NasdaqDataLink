@@ -13,23 +13,29 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.DataSource
 {
     /// <summary>
     /// Dynamic data class for Python algorithms.
     /// </summary>
-    [ObsoleteAttribute("PythonQuandl is obsolete. Use PythonNasdaq instead.", false)]
-    public class PythonQuandl : PythonNasdaq
+    public class PythonNasdaq : NasdaqDataLink
     {
+        protected static string ValueColumnName = "Close";
         /// <summary>
-        /// Constructor for initialising the PythonQuandl class
+        /// Constructor for initialising the PythonNasdaq class
         /// </summary>
-        [ObsoleteAttribute("PythonQuandl is obsolete. Use PythonNasdaq instead.", false)]
-        public PythonQuandl() : base(ValueColumnName)
+        public PythonNasdaq() : base(ValueColumnName)
         {
             //Empty constructor required for fast-reflection initialization
+        }
+
+        /// <summary>
+        /// Constructor for creating customized nasdaq instance which doesn't use "Close" as its value item.
+        /// </summary>
+        /// <param name="valueColumnName"></param>
+        public PythonNasdaq(string valueColumnName) : base(valueColumnName)
+        {
+            //
         }
     }
 }
