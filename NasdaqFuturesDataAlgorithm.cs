@@ -22,7 +22,7 @@ namespace QuantConnect.DataSource
     /// Futures demonstration algorithm.
     /// QuantConnect allows importing generic data sources! This example demonstrates importing a futures
     /// data from the popular open data source Nasdaq. QuantConnect has a special deal with Nasdaq giving you access
-    /// to Stevens Continuous Futurs (SCF) for free. If you'd like to download SCF for local backtesting, you can download it through Nasdaq.com.
+    /// to Stevens Continuous Futurs (SCF) for free. If you'd like to download SCF for local backtesting, you can download it through data.nasdaq.com.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="nasdaq" />
@@ -30,16 +30,18 @@ namespace QuantConnect.DataSource
     /// <meta name="tag" content="futures" />
     public class NasdaqFuturesDataAlgorithm : QCAlgorithm
     {
-        private string _crude = "SCF/CME_CL1_ON";
+        private string _crude = "SHFE/SCF2021";
 
         /// <summary>
         /// Initialize the data and resolution you require for your strategy
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2000, 1, 1);
-            SetEndDate(DateTime.Now.Date.AddDays(-1));
+            SetStartDate(2019, 10, 1);
+            SetEndDate(2020, 12, 31);
             SetCash(25000);
+
+            //NasdaqDataLink.SetAuthCode("your-nasdaq-token");
             AddData<NasdaqFuture>(_crude, Resolution.Daily);
         }
 

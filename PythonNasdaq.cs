@@ -20,22 +20,12 @@ namespace QuantConnect.DataSource
     /// </summary>
     public class PythonNasdaq : NasdaqDataLink
     {
-        protected static string ValueColumnName = "Close";
         /// <summary>
         /// Constructor for initialising the PythonNasdaq class
         /// </summary>
-        public PythonNasdaq() : base(ValueColumnName)
+        public PythonNasdaq() : base()
         {
             //Empty constructor required for fast-reflection initialization
-        }
-
-        /// <summary>
-        /// Constructor for creating customized nasdaq instance which doesn't use "Close" as its value item.
-        /// </summary>
-        /// <param name="valueColumnName"></param>
-        public PythonNasdaq(string valueColumnName) : base(valueColumnName)
-        {
-            //
         }
     }
 }

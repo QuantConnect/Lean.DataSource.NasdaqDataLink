@@ -21,13 +21,13 @@ namespace QuantConnect.DataSource
     /// Dynamic data class for Python algorithms.
     /// </summary>
     [ObsoleteAttribute("PythonQuandl is obsolete. Use PythonNasdaq instead.", false)]
-    public class PythonQuandl : PythonNasdaq
+    public class PythonQuandl : NasdaqDataLink
     {
         /// <summary>
         /// Constructor for initialising the PythonQuandl class
         /// </summary>
         [ObsoleteAttribute("PythonQuandl is obsolete. Use PythonNasdaq instead.", false)]
-        public PythonQuandl() : base(ValueColumnName)
+        public PythonQuandl() : base()
         {
             //Empty constructor required for fast-reflection initialization
         }

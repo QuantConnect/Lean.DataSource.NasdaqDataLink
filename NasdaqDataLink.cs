@@ -32,11 +32,35 @@ namespace QuantConnect.DataSource
     public class NasdaqDataLink : DynamicData
     {
         private static string _authCode = "your_api_key";
+        private string _valueColumnName;
         private bool _isInitialized;
         private readonly List<string> _propertyNames = new List<string>();
 
         // The NasdaqDataLink will use one of these column names if they are available and another option is not provided
         private readonly List<string> _keywords = new List<string> { "close", "price", "settle", "value" };
+
+        /// <summary>
+        /// Inserts the name of the column at first position in _keywords list
+        /// </summary>
+        /// <param name="valueColumnName">Name of the column to be used as Value</param>
+        private void SetValueColumnName(string valueColumnName)
+        {
+            _valueColumnName = valueColumnName.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(_valueColumnName)) return;
+
+            // Insert the value column name at the beginning of the keywords list
+            _keywords.Insert(0, _valueColumnName);
+        }
+
+        /// <summary>
+        /// Name of the column is going to be used for the field Value
+        /// </summary>
+        protected string ValueColumnName
+        {
+            get => _valueColumnName;
+            set => SetValueColumnName(value);
+        }
 
         /// <summary>
         /// Static constructor for the <see cref="NasdaqDataLink"/> class
@@ -51,7 +75,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// Default <see cref="NasdaqDataLink"/> constructor uses Close as its value column
         /// </summary>
-        public NasdaqDataLink() : this("Close")
+        public NasdaqDataLink()
         { 
         }
 
@@ -61,12 +85,7 @@ namespace QuantConnect.DataSource
         /// <param name="valueColumnName">The name of the column we want to use as reference, the Value property</param>
         protected NasdaqDataLink(string valueColumnName)
         {
-            valueColumnName = valueColumnName.Trim().ToLowerInvariant();
-
-            if (string.IsNullOrWhiteSpace(valueColumnName)) return;
-
-            // Insert the value column name at the beginning of the keywords list
-            _keywords.Insert(0, valueColumnName);
+            SetValueColumnName(valueColumnName);
         }
 
         /// <summary>

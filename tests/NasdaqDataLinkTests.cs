@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using ProtoBuf.Meta;
 using Newtonsoft.Json;
+using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.DataSource;
@@ -93,6 +94,75 @@ namespace QuantConnect.DataLibrary.Tests
             var data = newInstance.Reader(config, $"2021-12-02,100,101,100,101,1000,{expected}", DateTime.UtcNow, false);
 
             Assert.AreEqual(expected, data.Value);
+        }
+
+        [Test]
+        public void PythonValueColumn()
+        {
+            var expected = 999;
+            dynamic instance;
+            using (Py.GIL())
+            {
+                PyObject test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class Test(PythonNasdaq):
+    def __init__(self):
+        self.ValueColumnName = 'adj. close'").GetAttr("Test");
+                instance = test.CreateType().GetBaseDataInstance();
+            }
+
+            var symbol = Symbol.Create("UMICH/SOC1", 0, "empty");
+            var config = new SubscriptionDataConfig(typeof(PythonNasdaq), symbol,
+                Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
+
+            instance.Reader(config, "date,open,high,low,close,transactions,adj. close", DateTime.UtcNow, false);
+            var data = instance.Reader(config, $"2021-12-02,100,101,100,101,1000,{expected}", DateTime.UtcNow, false);
+
+            Assert.AreEqual(expected, data.Value);
+        }
+		
+		[Test]
+        public void TwoPythonValueColumn()
+        {
+            var ibmExpected = 999;
+            var spyExpected = 111;
+
+            dynamic ibmInstance;
+            dynamic spyInstance;
+
+            using (Py.GIL())
+            {
+                PyObject module = PythonEngine.ModuleFromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class CustomIBM(PythonNasdaq):
+    def __init__(self):
+        self.ValueColumnName = 'adj. close'
+
+class CustomSPY(PythonNasdaq):
+    def __init__(self):
+        self.ValueColumnName = 'adj. volume'");
+                ibmInstance = module.GetAttr("CustomIBM").CreateType().GetBaseDataInstance();
+                spyInstance = module.GetAttr("CustomSPY").CreateType().GetBaseDataInstance();
+            }
+
+            var ibm = Symbol.Create("IBM", 0, "empty");
+            var spy = Symbol.Create("SPY", 0, "empty");
+            var ibmConfig = new SubscriptionDataConfig(typeof(PythonNasdaq), ibm,
+                Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
+            var spyConfig = new SubscriptionDataConfig(typeof(PythonNasdaq), spy,
+                Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
+
+            ibmInstance.Reader(ibmConfig, "date,open,high,low,close,transactions,adj. close, adj. volume", DateTime.UtcNow, false);
+            spyInstance.Reader(spyConfig, "date,open,high,low,close,transactions,adj. close, adj. volume", DateTime.UtcNow, false);
+            var ibmData = ibmInstance.Reader(ibmConfig, $"2021-12-02,100,101,100,101,1000,{ibmExpected}, {spyExpected}", DateTime.UtcNow, false);
+            var spyData = spyInstance.Reader(spyConfig, $"2021-12-02,100,101,100,101,1000,{ibmExpected}, {spyExpected}", DateTime.UtcNow, false);
+
+            Assert.AreEqual(ibmExpected, ibmData.Value);
+            Assert.AreEqual(spyExpected, spyData.Value);
         }
 
         private void AssertAreEqual(object expected, object result, bool filterByCustomAttributes = false)

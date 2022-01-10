@@ -17,7 +17,7 @@ from AlgorithmImports import *
 ### Futures demonstration algorithm.
 ### QuantConnect allows importing generic data sources! This example demonstrates importing a futures
 ### data from the popular open data source NasdaqDataLink. QuantConnect has a special deal with NasdaqDataLink giving you access
-### to Stevens Continuous Futurs (SCF) for free. If you'd like to download SCF for local backtesting, you can download it through NasdaqDataLink.com.
+### to Stevens Continuous Futurs (SCF) for free. If you'd like to download SCF for local backtesting, you can download it through data.nasdaq.com.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="nasdaq" />
@@ -27,13 +27,13 @@ class NasdaqFuturesDataAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         ''' Initialize the data and resolution you require for your strategy '''
-        self.SetStartDate(2000, 1, 1)
-        self.SetEndDate(datetime.now().date() - timedelta(1))
+        self.SetStartDate(2019, 10, 1)
+        self.SetEndDate(2020, 12, 31)
         self.SetCash(25000)
 
         # NasdaqDataLink.SetAuthCode("your-nasdaq-token")
         # Symbol corresponding to the nasdaq code
-        self.crude = "SCF/CME_CL1_ON"
+        self.crude = "SHFE/SCF2021"
         self.AddData(NasdaqFuture, self.crude, Resolution.Daily)
 
 
