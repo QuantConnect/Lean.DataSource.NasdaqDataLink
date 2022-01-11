@@ -32,7 +32,6 @@ namespace QuantConnect.DataSource
     public class NasdaqDataLink : DynamicData
     {
         private static string _authCode = "your_api_key";
-        private string _valueColumnName;
         private bool _isInitialized;
         private readonly List<string> _propertyNames = new List<string>();
 
@@ -40,25 +39,13 @@ namespace QuantConnect.DataSource
         private readonly List<string> _keywords = new List<string> { "close", "price", "settle", "value" };
 
         /// <summary>
-        /// Inserts the name of the column at first position in _keywords list
-        /// </summary>
-        /// <param name="valueColumnName">Name of the column to be used as Value</param>
-        private void SetValueColumnName(string valueColumnName)
-        {
-            _valueColumnName = valueColumnName.Trim().ToLowerInvariant();
-
-            if (string.IsNullOrWhiteSpace(_valueColumnName)) return;
-
-            // Insert the value column name at the beginning of the keywords list
-            _keywords.Insert(0, _valueColumnName);
-        }
-
-        /// <summary>
         /// Name of the column is going to be used for the field Value
         /// </summary>
+        /// <remarks>This field will be set in the Python class constructor
+        /// which inherits from PythonNasdaq. It was made to allow the user to
+        /// set a specified column to be used as a value when working in Python.</remarks>
         protected string ValueColumnName
         {
-            get => _valueColumnName;
             set => SetValueColumnName(value);
         }
 
@@ -220,6 +207,20 @@ namespace QuantConnect.DataSource
         public TimeSpan Period
         {
             get { return QuantConnect.Time.OneDay; }
+        }
+
+        /// <summary>
+        /// Inserts the name of the column at first position in _keywords list
+        /// </summary>
+        /// <param name="valueColumnName">Name of the column to be used as Value</param>
+        private void SetValueColumnName(string valueColumnName)
+        {
+            valueColumnName = valueColumnName.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(valueColumnName)) return;
+
+            // Insert the value column name at the beginning of the keywords list
+            _keywords.Insert(0, valueColumnName);
         }
     }
 }
