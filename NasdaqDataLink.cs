@@ -60,17 +60,18 @@ namespace QuantConnect.DataSource
             // NET 4.5.2 and below does not enable this more secure protocol by default, so we add it in here
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
+            // Set the authentication token in NasdaqDataLink if it is set in Config
             var potentialNasdaqToken = Config.Get("nasdaq-auth-token");
             var potentialQuandlToken = Config.Get("quandl-auth-token");
 
-            if (potentialNasdaqToken.Length != 0)
+            if (!string.IsNullOrEmpty(potentialNasdaqToken))
             {
                 SetAuthCode(potentialNasdaqToken);
             } 
-            else if (potentialQuandlToken.Length != 0)
+            else if (!string.IsNullOrEmpty(potentialQuandlToken))
             {
                 SetAuthCode(potentialQuandlToken);
-                Log.Error("Quandl is obsolete. Use NasdaqDataLink instead.");
+                Log.Error("NasdaqDataLink(): 'quandl-auth-token' is obsolete please use 'nasdaq-auth-token' instead.");
             }
         }
 
