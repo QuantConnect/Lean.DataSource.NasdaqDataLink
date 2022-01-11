@@ -17,7 +17,9 @@
 using NodaTime;
 using ProtoBuf;
 using QuantConnect.Data;
+using QuantConnect.Configuration;
 using System;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -57,13 +59,26 @@ namespace QuantConnect.DataSource
             // The NasdaqDataLink API now requires TLS 1.2 for API requests (since 9/18/2018).
             // NET 4.5.2 and below does not enable this more secure protocol by default, so we add it in here
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+
+            var potentialNasdaqToken = Config.Get("nasdaq-auth-token");
+            var potentialQuandlToken = Config.Get("quandl-auth-token");
+
+            if (potentialNasdaqToken.Length != 0)
+            {
+                SetAuthCode(potentialNasdaqToken);
+            } 
+            else if (potentialQuandlToken.Length != 0)
+            {
+                SetAuthCode(potentialQuandlToken);
+                Log.Error("Quandl is obsolete. Use NasdaqDataLink instead.");
+            }
         }
 
         /// <summary>
         /// Default <see cref="NasdaqDataLink"/> constructor uses Close as its value column
         /// </summary>
         public NasdaqDataLink()
-        { 
+        {
         }
 
         /// <summary>
