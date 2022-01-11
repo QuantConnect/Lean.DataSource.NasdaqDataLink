@@ -62,20 +62,16 @@ namespace QuantConnect.DataSource
 
             // Set the authentication token in NasdaqDataLink if it is set in Config
             var potentialNasdaqToken = Config.Get("nasdaq-auth-token");
+            var potentialQuandlToken = Config.Get("quandl-auth-token");
 
             if (!string.IsNullOrEmpty(potentialNasdaqToken))
             {
                 SetAuthCode(potentialNasdaqToken);
             } 
-            else
+            else if (!string.IsNullOrEmpty(potentialQuandlToken))
             {
-                var potentialQuandlToken = Config.Get("quandl-auth-token");
-
-                if (!string.IsNullOrEmpty(potentialQuandlToken))
-                {
-                    SetAuthCode(potentialQuandlToken);
-                    Log.Error("NasdaqDataLink(): 'quandl-auth-token' is obsolete please use 'nasdaq-auth-token' instead.");
-                }
+                SetAuthCode(potentialQuandlToken);
+                Log.Error("NasdaqDataLink(): 'quandl-auth-token' is obsolete please use 'nasdaq-auth-token' instead.");
             }
         }
 
