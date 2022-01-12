@@ -45,7 +45,7 @@ class NasdaqFuturesDataAlgorithm(QCAlgorithm):
         self.Debug(str(self.Time) + str(" Purchased Crude Oil: ") + self.crude)
 
 
-class NasdaqFuture(PythonNasdaq):
+class NasdaqFuture(NasdaqDataLink):
     '''Custom nasdaq data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
     def __init__(self):
         # Define ValueColumnName: cannot be None, Empty or non-existant column name
