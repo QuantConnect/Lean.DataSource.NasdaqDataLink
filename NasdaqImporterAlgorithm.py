@@ -44,7 +44,7 @@ class NasdaqImporterAlgorithm(QCAlgorithm):
         self.Plot(self.nasdaqCode, "PriceSMA", self.sma.Current.Value)
 
 # NasdaqDataLink often doesn't use close columns so need to tell LEAN which is the "value" column.
-class NasdaqCustomColumns(PythonNasdaq):
+class NasdaqCustomColumns(NasdaqDataLink):
     '''Custom nasdaq data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''
     def __init__(self):
         # Define ValueColumnName: cannot be None, Empty or non-existant column name

@@ -44,7 +44,7 @@ namespace QuantConnect.DataSource
         /// Name of the column is going to be used for the field Value
         /// </summary>
         /// <remarks>This field will be set in the Python class constructor
-        /// which inherits from PythonNasdaq. It was made to allow the user to
+        /// which inherits from NasdaqDataLink. It was made to allow the user to
         /// set a specified column to be used as a value when working in Python.</remarks>
         protected string ValueColumnName
         {

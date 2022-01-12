@@ -61,7 +61,7 @@ class DemostrationWithIndicator(QCAlgorithm):
         elif self.ratio.Current.Value < 1:
                 self.Liquidate()
 
-class NasdaqCustomColumns(PythonNasdaq):
+class NasdaqCustomColumns(NasdaqDataLink):
     def __init__(self):
         self.ValueColumnName = "adj. close"
 

@@ -107,14 +107,14 @@ namespace QuantConnect.DataLibrary.Tests
                     @"
 from AlgorithmImports import *
 
-class Test(PythonNasdaq):
+class Test(NasdaqDataLink):
     def __init__(self):
         self.ValueColumnName = 'adj. close'").GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
 
             var symbol = Symbol.Create("UMICH/SOC1", 0, "empty");
-            var config = new SubscriptionDataConfig(typeof(PythonNasdaq), symbol,
+            var config = new SubscriptionDataConfig(typeof(NasdaqDataLink), symbol,
                 Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
 
             instance.Reader(config, "date,open,high,low,close,transactions,adj. close", DateTime.UtcNow, false);
@@ -138,11 +138,11 @@ class Test(PythonNasdaq):
                     @"
 from AlgorithmImports import *
 
-class CustomIBM(PythonNasdaq):
+class CustomIBM(NasdaqDataLink):
     def __init__(self):
         self.ValueColumnName = 'adj. close'
 
-class CustomSPY(PythonNasdaq):
+class CustomSPY(NasdaqDataLink):
     def __init__(self):
         self.ValueColumnName = 'adj. volume'");
                 ibmInstance = module.GetAttr("CustomIBM").CreateType().GetBaseDataInstance();
@@ -151,9 +151,9 @@ class CustomSPY(PythonNasdaq):
 
             var ibm = Symbol.Create("IBM", 0, "empty");
             var spy = Symbol.Create("SPY", 0, "empty");
-            var ibmConfig = new SubscriptionDataConfig(typeof(PythonNasdaq), ibm,
+            var ibmConfig = new SubscriptionDataConfig(typeof(NasdaqDataLink), ibm,
                 Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
-            var spyConfig = new SubscriptionDataConfig(typeof(PythonNasdaq), spy,
+            var spyConfig = new SubscriptionDataConfig(typeof(NasdaqDataLink), spy,
                 Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
 
             ibmInstance.Reader(ibmConfig, "date,open,high,low,close,transactions,adj. close, adj. volume", DateTime.UtcNow, false);
