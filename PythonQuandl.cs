@@ -14,8 +14,9 @@
 */
 
 using System;
+using QuantConnect.DataSource;
 
-namespace QuantConnect.DataSource
+namespace QuantConnect.Python
 {
     /// <summary>
     /// Dynamic data class for Python algorithms.
