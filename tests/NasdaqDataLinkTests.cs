@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.DataSource;
 
 namespace QuantConnect.DataLibrary.Tests
