@@ -5,13 +5,12 @@
     <RootNamespace>QuantConnect.DataSource</RootNamespace>
     <AssemblyName>QuantConnect.DataSource.NasdaqDataLink</AssemblyName>
     <OutputPath>bin\$(Configuration)</OutputPath>
-    <DocumentationFile>$(OutputPath)\QuantConnect.DataSource.xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\QuantConnect.DataSource.NasdaqDataLink.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="QuantConnect.Common" Version="2.5.*" />
     <PackageReference Include="protobuf-net" Version="3.0.29" />
-    <PackageReference Include="protobuf-net.Core" Version="3.0.29" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
