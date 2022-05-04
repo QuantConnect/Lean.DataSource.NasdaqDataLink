@@ -23,8 +23,8 @@ using Newtonsoft.Json;
 using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.DataSource;
+using QuantConnect.Data.Custom;
 
 namespace QuantConnect.DataLibrary.Tests
 {
@@ -100,16 +100,18 @@ namespace QuantConnect.DataLibrary.Tests
         [Test]
         public void PythonValueColumn()
         {
+            PythonEngine.Initialize();
             var expected = 999;
             dynamic instance;
             using (Py.GIL())
             {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
+                PyObject test = PyModule.FromString("testModule",
                     @"
-from AlgorithmImports import *
+from QuantConnect.DataSource import *
 
 class Test(NasdaqDataLink):
     def __init__(self):
+        super().__init__()
         self.ValueColumnName = 'adj. close'").GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
@@ -127,6 +129,7 @@ class Test(NasdaqDataLink):
 		[Test]
         public void TwoPythonValueColumn()
         {
+            PythonEngine.Initialize();
             var ibmExpected = 999;
             var spyExpected = 111;
 
@@ -135,16 +138,18 @@ class Test(NasdaqDataLink):
 
             using (Py.GIL())
             {
-                PyObject module = PythonEngine.ModuleFromString("testModule",
+                PyObject module = PyModule.FromString("testModule",
                     @"
-from AlgorithmImports import *
+from QuantConnect.DataSource import *
 
 class CustomIBM(NasdaqDataLink):
     def __init__(self):
+        super().__init__()
         self.ValueColumnName = 'adj. close'
 
 class CustomSPY(NasdaqDataLink):
     def __init__(self):
+        super().__init__()
         self.ValueColumnName = 'adj. volume'");
                 ibmInstance = module.GetAttr("CustomIBM").CreateType().GetBaseDataInstance();
                 spyInstance = module.GetAttr("CustomSPY").CreateType().GetBaseDataInstance();
