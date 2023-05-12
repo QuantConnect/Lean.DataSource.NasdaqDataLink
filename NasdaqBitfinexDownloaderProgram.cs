@@ -17,7 +17,6 @@ using System;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Logging;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.DataSource
 {
@@ -37,7 +36,7 @@ namespace QuantConnect.DataSource
             try
             {
                 // Load settings from config.json
-                var dataDirectory = Config.Get("data-directory", "../../../Data");
+                var dataDirectory = Globals.DataFolder;
 
                 // Create an instance of the downloader
                 const string market = Market.Bitfinex;
