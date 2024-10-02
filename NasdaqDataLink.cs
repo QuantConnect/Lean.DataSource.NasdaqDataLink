@@ -113,8 +113,8 @@ namespace QuantConnect.DataSource
         /// <returns>STRING API Url for Nasdaq Data Link.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = $"https://data.nasdaq.com/api/v3/datasets/{config.Symbol.Value}.csv?order=asc&api_key={_authCode}";
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+            var source = $"https://data.nasdaq.com/api/v3/datatables/{config.Symbol.Value}.csv?api_key={_authCode}";
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile) { Sort = true };
         }
 
         /// <summary>
@@ -145,9 +145,9 @@ namespace QuantConnect.DataSource
                 return null;
             }
 
-            data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            data.Time = DateTime.ParseExact(csv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            for (var i = 1; i < csv.Length; i++)
+            for (var i = 3; i < csv.Length; i++)
             {
                 var value = csv[i].ToDecimal();
                 data.SetProperty(_propertyNames[i], value);
