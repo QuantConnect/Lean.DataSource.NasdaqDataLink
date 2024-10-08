@@ -37,7 +37,7 @@ namespace QuantConnect.DataSource
         /// <summary>
         /// The API key used for authentication with the external service (Nasdaq).
         /// </summary>
-        private static string _apiKey = "your_api_key";
+        private static string _apiKey = string.Empty;
 
         /// <summary>
         /// Stores the index of the "date" field in the CSV file.
