@@ -9,10 +9,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    container:
-        image: quantconnect/lean:foundation
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Free space
+        run: df -h && rm -rf /opt/hostedtoolcache* && df -h
 
       - name: Checkout Lean Same Branch
         id: lean-same-branch
@@ -33,11 +35,16 @@ jobs:
       - name: Move Lean
         run: mv Lean ../Lean
 
-      - name: BuildDataSource
-        run: dotnet build ./QuantConnect.DataSource.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
-
-      - name: BuildTests
-        run: dotnet build ./tests/Tests.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
-
-      - name: Run Tests
-        run: dotnet test ./tests/bin/Release/net6.0/Tests.dll
+      - name: Run Image
+        uses: addnab/docker-run-action@v3
+        with:
+          image: quantconnect/lean:foundation
+          options: -v /home/runner/work:/__w --workdir /__w/Lean.DataSource.Polygon/Lean.DataSource.Polygon -e QC_POLYGON_API_KEY=${{ secrets.POLYGON_API_KEY }} -e QC_JOB_USER_ID=${{ secrets.JOB_USER_ID }} -e QC_API_ACCESS_TOKEN=${{ secrets.API_ACCESS_TOKEN }} -e QC_JOB_ORGANIZATION_ID=${{ secrets.JOB_ORGANIZATION_ID }}
+          shell: bash
+          run: |
+            # Build NasdaqDataLink
+            dotnet build ./QuantConnect.DataSource.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
+            # Build Tests NasdaqDataLink
+            dotnet build ./tests/Tests.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
+            # Run Tests NasdaqDataLink
+            dotnet test ./tests/bin/Release/net6.0/Tests.dll
