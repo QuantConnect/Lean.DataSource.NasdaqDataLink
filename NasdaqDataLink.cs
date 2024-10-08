@@ -24,7 +24,6 @@ using QuantConnect.Logging;
 using System.Globalization;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
-using System.Data.Common;
 
 namespace QuantConnect.DataSource
 {
@@ -47,6 +46,12 @@ namespace QuantConnect.DataSource
         /// It is used to locate and parse date-related data.
         /// </remarks>
         private int _indexDateTime;
+
+        /// <summary>
+        /// Stores the date format string used for parsing date values.
+        /// The format is set dynamically based on the property name (e.g., "yyyy-MM-dd" for a full date or "yyyy" for just a year).
+        /// </summary>
+        private string parsingFormatDateTime;
 
         /// <summary>
         /// Indicates whether the initialization process has been completed.
@@ -171,9 +176,23 @@ namespace QuantConnect.DataSource
                 {
                     var propertyName = csv[i];
 
-                    if (propertyName.Equals("date", StringComparison.InvariantCultureIgnoreCase))
+                    if (_indexDateTime == 0)
                     {
-                        _indexDateTime = i;
+                        switch (propertyName.ToLower())
+                        {
+                            case "date":
+                                parsingFormatDateTime = "yyyy-MM-dd";
+                                _indexDateTime = i;
+                                break;
+                            case "year":
+                                parsingFormatDateTime = "yyyy";
+                                _indexDateTime = i;
+                                break;
+                            case "report_month":
+                                parsingFormatDateTime = "yyyy-MM";
+                                _indexDateTime = i;
+                                break;
+                        }
                     }
 
                     var property = propertyName.Trim().ToLowerInvariant();
@@ -186,14 +205,26 @@ namespace QuantConnect.DataSource
                 return null;
             }
 
-            data.Time = DateTime.ParseExact(csv[_indexDateTime], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            // Start iterating after _indexDateTime(the "date" column) 
-            // because the subsequent properties contain specific 'values'
-            for (var i = _indexDateTime + 1; i < csv.Length; i++)
+            for (var i = 0; i < csv.Length; i++)
             {
-                var value = csv[i].ToDecimal();
-                data.SetProperty(_propertyNames[i], value);
+                if (string.IsNullOrEmpty(csv[i]))
+                {
+                    continue;
+                }
+
+                if (i == _indexDateTime)
+                {
+                    data.Time = DateTime.ParseExact(csv[_indexDateTime], parsingFormatDateTime, CultureInfo.InvariantCulture);
+                    data.SetProperty(_propertyNames[i], data.Time);
+                }
+                else if (decimal.TryParse(csv[i], NumberStyles.AllowExponent | NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                {
+                    data.SetProperty(_propertyNames[i], value);
+                }
+                else
+                {
+                    data.SetProperty(_propertyNames[i], csv[i]);
+                }
             }
 
             var valueColumnName = _keywords.Intersect(_propertyNames).FirstOrDefault();
