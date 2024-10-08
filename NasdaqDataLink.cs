@@ -162,7 +162,7 @@ namespace QuantConnect.DataSource
                     data.Time = dateTime;
                     data.SetProperty(_propertyNames[i], dateTime);
                 }
-                else if (decimal.TryParse(csv[i], NumberStyles.AllowExponent | NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                else if (decimal.TryParse(csv[i], NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
                 {
                     data.SetProperty(_propertyNames[i], value);
                 }
