@@ -14,16 +14,17 @@
  *
 */
 
-using NodaTime;
-using ProtoBuf;
-using QuantConnect.Data;
-using QuantConnect.Configuration;
 using System;
-using QuantConnect.Logging;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using ProtoBuf;
+using NodaTime;
 using System.Net;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Logging;
+using System.Globalization;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using System.Data.Common;
 
 namespace QuantConnect.DataSource
 {
@@ -33,23 +34,57 @@ namespace QuantConnect.DataSource
     [ProtoContract(SkipConstructor = true)]
     public class NasdaqDataLink : DynamicData
     {
-        private static string _authCode = "your_api_key";
-        private bool _isInitialized;
-        private readonly List<string> _propertyNames = new List<string>();
+        /// <summary>
+        /// The API key used for authentication with the external service (Nasdaq).
+        /// </summary>
+        private static string _apiKey = "your_api_key";
 
-        // The NasdaqDataLink will use one of these column names if they are available and another option is not provided
+        /// <summary>
+        /// Stores the index of the "date" field in the CSV file.
+        /// </summary>
+        /// <remarks>
+        /// This field is assigned the position of the "date" column when iterating through the CSV headers. 
+        /// It is used to locate and parse date-related data.
+        /// </remarks>
+        private int _indexDateTime;
+
+        /// <summary>
+        /// Indicates whether the initialization process has been completed.
+        /// </summary>
+        /// <remarks>
+        /// This field ensures that the CSV header parsing and initialization of property names
+        /// only happens once during the execution.
+        /// </remarks>
+        private bool _isInitialized;
+
+        private readonly List<string> _propertyNames = new();
+
+        /// <summary>
+        /// A list of default column names used by the NasdaqDataLink API for identifying key financial data.
+        /// </summary>
+        /// <remarks>
+        /// If another column name option is not explicitly provided, the NasdaqDataLink API will attempt to use one of the following
+        /// default keywords: "close", "price", "settle", or "value" to retrieve financial data.
+        /// </remarks>
         private readonly List<string> _keywords = new List<string> { "close", "price", "settle", "value" };
 
         /// <summary>
-        /// Name of the column is going to be used for the field Value
+        /// Specifies the name of the column to be used for the field representing the value.
         /// </summary>
-        /// <remarks>This field will be set in the Python class constructor
-        /// which inherits from NasdaqDataLink. It was made to allow the user to
-        /// set a specified column to be used as a value when working in Python.</remarks>
-        protected string ValueColumnName
-        {
-            set => SetValueColumnName(value);
-        }
+        /// <remarks>
+        /// This property is set within the Python class constructor that inherits from <c>NasdaqDataLink</c>. 
+        /// It allows the user to define a specific column to be used as the value when interacting with the class in Python.
+        /// </remarks>
+        protected string ValueColumnName { set => SetValueColumnName(value); }
+
+        /// <summary>
+        /// Indicates whether the Nasdaq Data Link API key has been set.
+        /// </summary>
+        /// <remarks>
+        /// This flag is used to check if the API key has been configured. It returns <c>true</c> if the key has been set, 
+        /// and <c>false</c> otherwise.
+        /// </remarks>
+        public static bool IsApiKeySet { get; private set; }
 
         /// <summary>
         /// Static constructor for the <see cref="NasdaqDataLink"/> class
@@ -65,15 +100,15 @@ namespace QuantConnect.DataSource
 
             if (!string.IsNullOrEmpty(potentialNasdaqToken))
             {
-                SetAuthCode(potentialNasdaqToken);
-            } 
+                SetApiKey(potentialNasdaqToken);
+            }
             else
             {
                 var potentialQuandlToken = Config.Get("quandl-auth-token");
 
                 if (!string.IsNullOrEmpty(potentialQuandlToken))
                 {
-                    SetAuthCode(potentialQuandlToken);
+                    SetApiKey(potentialQuandlToken);
                     Log.Error("NasdaqDataLink(): 'quandl-auth-token' is obsolete please use 'nasdaq-auth-token' instead.");
                 }
             }
@@ -96,15 +131,6 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
-        /// Flag indicating whether or not the Nasdaq Data Link auth code has been set yet
-        /// </summary>
-        public static bool IsAuthCodeSet
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Using the Nasdaq Data Link V3 API automatically set the URL for the dataset.
         /// </summary>
         /// <param name="config">Subscription configuration object</param>
@@ -113,7 +139,12 @@ namespace QuantConnect.DataSource
         /// <returns>STRING API Url for Nasdaq Data Link.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = $"https://data.nasdaq.com/api/v3/datatables/{config.Symbol.Value}.csv?api_key={_authCode}";
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                throw new ArgumentException($"{nameof(NasdaqDataLink)}.{nameof(GetSource)}: API key cannot be null or empty.", nameof(_apiKey));
+            }
+
+            var source = $"https://data.nasdaq.com/api/v3/datatables/{config.Symbol.Value}.csv?api_key={_apiKey}";
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile) { Sort = true };
         }
 
@@ -128,33 +159,45 @@ namespace QuantConnect.DataSource
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             // be sure to instantiate the correct type
-            var data = (NasdaqDataLink) Activator.CreateInstance(GetType());
+            var data = (NasdaqDataLink)Activator.CreateInstance(GetType());
             data.Symbol = config.Symbol;
             var csv = line.Split(',');
 
             if (!_isInitialized)
             {
                 _isInitialized = true;
-                foreach (var propertyName in csv)
+
+                for (int i = 0; i < csv.Length; i++)
                 {
+                    var propertyName = csv[i];
+
+                    if (propertyName.Equals("date", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        _indexDateTime = i;
+                    }
+
                     var property = propertyName.Trim().ToLowerInvariant();
                     data.SetProperty(property, 0m);
                     _propertyNames.Add(property);
                 }
+
+
                 // Returns null at this point where we are only reading the properties names
                 return null;
             }
 
-            data.Time = DateTime.ParseExact(csv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            data.Time = DateTime.ParseExact(csv[_indexDateTime], "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            for (var i = 3; i < csv.Length; i++)
+            // Start iterating after _indexDateTime(the "date" column) 
+            // because the subsequent properties contain specific 'values'
+            for (var i = _indexDateTime + 1; i < csv.Length; i++)
             {
                 var value = csv[i].ToDecimal();
                 data.SetProperty(_propertyNames[i], value);
             }
 
             var valueColumnName = _keywords.Intersect(_propertyNames).FirstOrDefault();
-            
+
             if (valueColumnName != null)
             {
                 // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
@@ -165,15 +208,23 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
-        /// Set the auth code for the Nasdaq Data Link set to the QuantConnect auth code.
+        /// Sets the API key for the Nasdaq Data Link.
         /// </summary>
-        /// <param name="authCode"></param>
-        public static void SetAuthCode(string authCode)
+        /// <param name="apiKey">The API key to be used for authentication. Must not be null or whitespace.</param>
+        /// <remarks>
+        /// This method assigns the provided API key to the internal field if it is valid (non-null and non-whitespace). 
+        /// Once the key is set, the <c>IsApiKeySet</c> flag is updated to <c>true</c>.
+        /// </remarks>
+        public static void SetApiKey(string apiKey)
         {
-            if (string.IsNullOrWhiteSpace(authCode)) return;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Log.Trace($"{nameof(NasdaqDataLink)}.{nameof(SetApiKey)}: The API key for Nasdaq Data Link was not provided or is empty.");
+                return;
+            }
 
-            _authCode = authCode;
-            IsAuthCodeSet = true;
+            _apiKey = apiKey;
+            IsApiKeySet = true;
         }
 
         /// <summary>
