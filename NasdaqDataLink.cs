@@ -36,17 +36,6 @@ namespace QuantConnect.DataSource
         private static string _authCode = "your_api_key";
         private bool _isInitialized;
 
-        /// <summary>
-        /// Stores the index of the "date" field in the CSV file headers.
-        /// </summary>
-        private int _indexDateTime;
-
-        /// <summary>
-        /// Stores the date format string used for parsing date values.
-        /// The format is set dynamically based on the property name (e.g., "yyyy", "yyyy-MM", "yyyy-MM-dd").
-        /// </summary>
-        private string parsingFormatDateTime;
-
         private readonly List<string> _propertyNames = new List<string>();
 
         // The NasdaqDataLink will use one of these column names if they are available and another option is not provided
@@ -151,26 +140,6 @@ namespace QuantConnect.DataSource
                 for (int i = 0; i < csv.Length; i++)
                 {
                     var propertyName = csv[i];
-
-                    if (_indexDateTime == 0)
-                    {
-                        switch (propertyName.ToLower())
-                        {
-                            case "date":
-                                parsingFormatDateTime = "yyyy-MM-dd";
-                                _indexDateTime = i;
-                                break;
-                            case "year":
-                                parsingFormatDateTime = "yyyy";
-                                _indexDateTime = i;
-                                break;
-                            case "report_month":
-                                parsingFormatDateTime = "yyyy-MM";
-                                _indexDateTime = i;
-                                break;
-                        }
-                    }
-
                     var property = propertyName.Trim().ToLowerInvariant();
                     data.SetProperty(property, 0m);
                     _propertyNames.Add(property);
@@ -188,10 +157,10 @@ namespace QuantConnect.DataSource
                     continue;
                 }
 
-                if (i == _indexDateTime)
+                if (TryParseDateTimeFormat(_propertyNames[i], out var format) && DateTime.TryParseExact(csv[i], format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
                 {
-                    data.Time = DateTime.ParseExact(csv[_indexDateTime], parsingFormatDateTime, CultureInfo.InvariantCulture);
-                    data.SetProperty(_propertyNames[i], data.Time);
+                    data.Time = dateTime;
+                    data.SetProperty(_propertyNames[i], dateTime);
                 }
                 else if (decimal.TryParse(csv[i], NumberStyles.AllowExponent | NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
                 {
@@ -291,6 +260,34 @@ namespace QuantConnect.DataSource
 
             // Insert the value column name at the beginning of the keywords list
             _keywords.Insert(0, valueColumnName);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the date format string based on the specified property name.
+        /// </summary>
+        /// <param name="propertyName">The name of the date-related property (e.g., "date", "year").</param>
+        /// <param name="format">The output format string corresponding to the property name, if found.</param>
+        /// <returns>
+        /// <c>true</c> if a valid date format is found; otherwise, <c>false</c>.
+        /// </returns>
+        private static bool TryParseDateTimeFormat(string propertyName, out string format)
+        {
+            format = string.Empty;
+            switch (propertyName.ToLower())
+            {
+                case "date":
+                    format = "yyyy-MM-dd";
+                    break;
+                case "year":
+                    format = "yyyy";
+                    break;
+                case "report_month":
+                    format = "yyyy-MM";
+                    break;
+                default:
+                    return false;
+            }
+            return true;
         }
     }
 }
