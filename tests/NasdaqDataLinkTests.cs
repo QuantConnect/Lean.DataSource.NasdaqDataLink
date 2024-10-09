@@ -97,6 +97,43 @@ namespace QuantConnect.DataLibrary.Tests
             Assert.AreEqual(expected, data.Value);
         }
 
+        [TestCase("QDL/FON", "contract_code,type,date,market_participation,producer_merchant_processor_user_longs,producer_merchant_processor_user_shorts,swap_dealer_longs,swap_dealer_shorts,swap_dealer_spreads,money_manager_longs,money_manager_shorts,money_manager_spreads,other_reportable_longs,other_reportable_shorts,other_reportable_spreads,total_reportable_longs,total_reportable_shorts,non_reportable_longs,non_reportable_shorts", "967654,FO_OLD,2017-12-26,27122.0,9984.0,19225.0,1945.0,1405.0,1596.0,0.0,150.0,0.0,8316.0,597.0,1464.0,23305.0,24437.0,3817.0,2685.0", Description = "Commodity Futures Trading Commission Reports: Futures and Options Metrics: OI and NT")]
+        [TestCase("QDL/LFON", "contract_code,type,date,market_participation,non_commercial_longs,non_commercial_shorts,non_commercial_spreads,commercial_longs,commercial_shorts,total_reportable_longs,total_reportable_shorts,non_reportable_longs,non_reportable_shorts", "ZB9105,FO_L_OLD_OI,2018-11-27,100.0,68.6,68.6,31.4,0.0,0.0,100.0,100.0,0.0,0.0", Description = "Commodity Futures Trading Commission Reports: Legacy Futures and Options Metrics: OI and NT")]
+        [TestCase("QDL/FCR", "contract_code,type,date,largest_4_longs_gross,largest_4_shorts_gross,largest_8_longs_gross,largest_8_shorts_gross,largest_4_longs_net,largest_4_shorts_net,largest_8_longs_net,largest_8_shorts_net", "ZB9105,F_L_ALL_CR,2018-10-30,87.6,99.0,97.8,100.0,13.7,16.1,15.8,16.3", Description = "Commodity Futures Trading Commission Reports: Futures and Options Metrics: CR")]
+        [TestCase("QDL/BCHAIN", "code,date,value", "TRFUS,2020-08-28,1197064.8298", Description = "Bitcoin Data Insights")]
+        [TestCase("QDL/ODA", "indicator,date,value", "ZWE_PPPSH,2018-12-31,0.028", Description = "IMF Cross Country Macroeconomic Statistics")]
+        [TestCase("QDL/ODA", "indicator,date,value", "ZWE_PPPSH,1997-12-31,", Description = "IMF Cross Country Macroeconomic Statistics")]
+        [TestCase("QDL/JODI", "energy,code,country,date,value,notes", "OIL,TPSDKT,ZAF,2024-04-30,0.0000,3", Description = "JODI Oil World Database")]
+        [TestCase("QDL/JODI", "energy,code,country,date,value,notes", "OIL,TPSDKT,TTO,2005-03-31,,3", Description = "JODI Oil World Database")]
+        [TestCase("QDL/BITFINEX", "code,date,high,low,mid,last,bid,ask,volume", "ZRXUSD,2024-09-13,0.30349,0.28357,0.29886,0.29922,0.29865,0.29907,236649.194029", Description = "Bitfinex Crypto Coins Exchange Rate")]
+        [TestCase("QDL/BITFINEX", "code,date,high,low,mid,last,bid,ask,volume", "ZRXBTC,2022-02-20,1.493e-05,1.448e-05,1.487e-05,1.489e-05,1.485e-05,1.489e-05,6907.80795766", Description = "Bitfinex Crypto Coins Exchange Rate")]
+        [TestCase("QDL/OPEC", "date,value", "2024-01-12,80.18", Description = "Organization of the Petroleum Exporting Countries")]
+        [TestCase("QDL/LME", "item_code,country_code,date,opening_stock,delivered_in,delivered_out,closing_stock,open_tonnage,cancelled_tonnage", "ZIJ,UTO,2024-07-12,0.0,0.0,0.0,0.0,0.0,0.0", Description = "Metal Stocks Breakdown Report")]
+        [TestCase("QDL/LME", "item_code,country_code,date,opening_stock,delivered_in,delivered_out,closing_stock,open_tonnage,cancelled_tonnage", "ZII,UNE,2020-07-23,26075.0,0.0,0.0,26075.0,14425.0,11650.0", Description = "Metal Stocks Breakdown Report")]
+        [TestCase("ZILLOW/DATA", "indicator_id,region_id,date,value", "ZSFH,99999,2024-04-30,481777.608668988", Description = "Zillow Real Estate Data")]
+        [TestCase("ZILLOW/DATA", "indicator_id,region_id,date,value", "ZSFH,99993,2008-07-31,139908.0", Description = "Zillow Real Estate Data")]
+        [TestCase("WB/DATA", "series_id,country_code,country_name,year,value", "VC.PKP.TOTL.UN,XKX,Kosovo,2017,357.0", Description = "World Bank Data")]
+        [TestCase("WB/DATA", "series_id,country_code,country_name,year,value", "VC.IHR.PSRC.P5,ALB,Albania,1998,20.4196832752429", Description = "World Bank Data")]
+        [TestCase("WASDE/DATA", "code,report_month,region,commodity,item,year,period,value,min_value,max_value", "WHEAT_WORLD_19,2024-02,World Less China,Wheat,Production,2023/24 Proj.,Jan,648.32,,", Description = "World Agricultural Supply and Demand Estimates")]
+        [TestCase("WASDE/DATA", "code,report_month,region,commodity,item,year,period,value,min_value,max_value", "WHEAT_WORLD_19,2022-08,N. Africa 7/,Wheat,Production,2022/23 Proj.,Jul,17.15,,", Description = "World Agricultural Supply and Demand Estimates")]
+        [TestCase("WASDE/DATA", "code,report_month,region,commodity,item,year,period,value,min_value,max_value", "WHEAT_WORLD_19,2021-05,Brazil,Wheat,Beginning Stocks,2021/22 Proj.,May,0.64,,", Description = "World Agricultural Supply and Demand Estimates")]
+        public void CreateDifferentNasdaqDataSymbolWithVariousProperties(string nasdaqDataName, string csvHeader, string csvData)
+        {
+            var nasdaq = new NasdaqDataLink();
+
+            var symbol = Symbol.Create(nasdaqDataName, SecurityType.Base, "empty");
+
+            var config = new SubscriptionDataConfig(typeof(NasdaqDataLink), symbol, Resolution.Daily, TimeZones.Utc, TimeZones.Utc, true, true, false, true);
+
+            var dateTimeUtcNow = DateTime.UtcNow;
+
+            nasdaq.Reader(config, csvHeader, dateTimeUtcNow, false);
+            var data = nasdaq.Reader(config, csvData, dateTimeUtcNow, false);
+
+            Assert.That(data.Time, Is.Not.EqualTo(default));
+            Assert.GreaterOrEqual(data.Value, 0m);
+        }
+
         [Test]
         public void PythonValueColumn()
         {

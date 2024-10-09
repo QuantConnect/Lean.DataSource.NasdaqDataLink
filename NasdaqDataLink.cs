@@ -14,16 +14,16 @@
  *
 */
 
-using NodaTime;
-using ProtoBuf;
-using QuantConnect.Data;
-using QuantConnect.Configuration;
 using System;
-using QuantConnect.Logging;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using ProtoBuf;
+using NodaTime;
 using System.Net;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Logging;
+using System.Globalization;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.DataSource
 {
@@ -35,6 +35,7 @@ namespace QuantConnect.DataSource
     {
         private static string _authCode = "your_api_key";
         private bool _isInitialized;
+
         private readonly List<string> _propertyNames = new List<string>();
 
         // The NasdaqDataLink will use one of these column names if they are available and another option is not provided
@@ -66,7 +67,7 @@ namespace QuantConnect.DataSource
             if (!string.IsNullOrEmpty(potentialNasdaqToken))
             {
                 SetAuthCode(potentialNasdaqToken);
-            } 
+            }
             else
             {
                 var potentialQuandlToken = Config.Get("quandl-auth-token");
@@ -113,8 +114,8 @@ namespace QuantConnect.DataSource
         /// <returns>STRING API Url for Nasdaq Data Link.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = $"https://data.nasdaq.com/api/v3/datasets/{config.Symbol.Value}.csv?order=asc&api_key={_authCode}";
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+            var source = $"https://data.nasdaq.com/api/v3/datatables/{config.Symbol.Value}.csv?api_key={_authCode}";
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile) { Sort = true };
         }
 
         /// <summary>
@@ -128,33 +129,51 @@ namespace QuantConnect.DataSource
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             // be sure to instantiate the correct type
-            var data = (NasdaqDataLink) Activator.CreateInstance(GetType());
+            var data = (NasdaqDataLink)Activator.CreateInstance(GetType());
             data.Symbol = config.Symbol;
             var csv = line.Split(',');
 
             if (!_isInitialized)
             {
                 _isInitialized = true;
-                foreach (var propertyName in csv)
+
+                for (int i = 0; i < csv.Length; i++)
                 {
+                    var propertyName = csv[i];
                     var property = propertyName.Trim().ToLowerInvariant();
                     data.SetProperty(property, 0m);
                     _propertyNames.Add(property);
                 }
+
+
                 // Returns null at this point where we are only reading the properties names
                 return null;
             }
 
-            data.Time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            for (var i = 1; i < csv.Length; i++)
+            for (var i = 0; i < csv.Length; i++)
             {
-                var value = csv[i].ToDecimal();
-                data.SetProperty(_propertyNames[i], value);
+                if (string.IsNullOrEmpty(csv[i]))
+                {
+                    continue;
+                }
+
+                if (TryParseDateTimeFormat(_propertyNames[i], out var format) && DateTime.TryParseExact(csv[i], format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+                {
+                    data.Time = dateTime;
+                    data.SetProperty(_propertyNames[i], dateTime);
+                }
+                else if (decimal.TryParse(csv[i], NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+                {
+                    data.SetProperty(_propertyNames[i], value);
+                }
+                else
+                {
+                    data.SetProperty(_propertyNames[i], csv[i]);
+                }
             }
 
             var valueColumnName = _keywords.Intersect(_propertyNames).FirstOrDefault();
-            
+
             if (valueColumnName != null)
             {
                 // If the dataset has any column matches the keywords, set .Value as the first common element with it/them
@@ -241,6 +260,34 @@ namespace QuantConnect.DataSource
 
             // Insert the value column name at the beginning of the keywords list
             _keywords.Insert(0, valueColumnName);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the date format string based on the specified property name.
+        /// </summary>
+        /// <param name="propertyName">The name of the date-related property (e.g., "date", "year").</param>
+        /// <param name="format">The output format string corresponding to the property name, if found.</param>
+        /// <returns>
+        /// <c>true</c> if a valid date format is found; otherwise, <c>false</c>.
+        /// </returns>
+        private static bool TryParseDateTimeFormat(string propertyName, out string format)
+        {
+            format = string.Empty;
+            switch (propertyName.ToLower())
+            {
+                case "date":
+                    format = "yyyy-MM-dd";
+                    break;
+                case "year":
+                    format = "yyyy";
+                    break;
+                case "report_month":
+                    format = "yyyy-MM";
+                    break;
+                default:
+                    return false;
+            }
+            return true;
         }
     }
 }
