@@ -52,4 +52,4 @@ jobs:
             # Build Tests NasdaqDataLink
             dotnet build ./tests/Tests.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1 && \
             # Run Tests NasdaqDataLink
-            dotnet test ./tests/bin/Release/net6.0/Tests.dll
+            dotnet test ./tests/bin/Release/net9.0/Tests.dll
