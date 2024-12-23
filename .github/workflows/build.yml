@@ -8,13 +8,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Free space
-        run: df -h && sudo rm -rf /usr/local/lib/android && sudo rm -rf /opt/ghc && rm -rf /opt/hostedtoolcache* && df -h
+      - name: Liberate disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
 
       - name: Checkout Lean Same Branch
         id: lean-same-branch
@@ -43,8 +48,8 @@ jobs:
           shell: bash
           run: |
             # Build NasdaqDataLink
-            dotnet build ./QuantConnect.DataSource.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
+            dotnet build ./QuantConnect.DataSource.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1 && \
             # Build Tests NasdaqDataLink
-            dotnet build ./tests/Tests.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1
+            dotnet build ./tests/Tests.csproj /p:Configuration=Release /v:quiet /p:WarningLevel=1 && \
             # Run Tests NasdaqDataLink
-            dotnet test ./tests/bin/Release/net6.0/Tests.dll
+            dotnet test ./tests/bin/Release/net9.0/Tests.dll
