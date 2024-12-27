@@ -53,6 +53,13 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
+        /// Additional filters to apply on API call.
+        /// </summary>
+        protected Dictionary<string, string> AdditionalFilters = new();
+
+        private string _getAdditionalProperties => string.Join('&', AdditionalFilters.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+        /// <summary>
         /// Static constructor for the <see cref="NasdaqDataLink"/> class
         /// </summary>
         static NasdaqDataLink()
@@ -97,6 +104,38 @@ namespace QuantConnect.DataSource
         }
 
         /// <summary>
+        /// Constructor for creating customized <see cref="NasdaqDataLink"/> instance which doesn't use close, price, settle or value as its value item.
+        /// </summary>
+        /// <param name="filterDict">Collection of property name-value pairs to be passed on the API call</param>
+        protected NasdaqDataLink(Dictionary<string, string> filterDict)
+        {
+            AddFilter(filterDict);
+        }
+
+        /// <summary>
+        /// Constructor for creating customized <see cref="NasdaqDataLink"/> instance which doesn't use close, price, settle or value as its value item.
+        /// </summary>
+        /// <param name="valueColumnName">The name of the column we want to use as reference, the Value property</param>
+        /// <param name="filterDict">Collection of property name-value pairs to be passed on the API call</param>
+        protected NasdaqDataLink(string valueColumnName, Dictionary<string, string> filterDict)
+            : this(filterDict)
+        {
+            SetValueColumnName(valueColumnName);
+        }
+
+        /// <summary>
+        /// To add additional filter when doing data API call.
+        /// </summary>
+        /// <param name="filterDict">Collection of property name-value pairs to be passed on the API call</param>
+        private void AddFilter(Dictionary<string, string> filterDict)
+        {
+            foreach (var (key, value) in filterDict)
+            {
+                AdditionalFilters.Add(key, value);
+            }
+        }
+
+        /// <summary>
         /// Flag indicating whether or not the Nasdaq Data Link auth code has been set yet
         /// </summary>
         public static bool IsAuthCodeSet
@@ -115,6 +154,11 @@ namespace QuantConnect.DataSource
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var source = $"https://data.nasdaq.com/api/v3/datatables/{config.Symbol.Value}.csv?api_key={_authCode}";
+            var additionalProperties = _getAdditionalProperties;
+            if (!string.IsNullOrEmpty(additionalProperties))
+            {
+                source += $"&{additionalProperties}";
+            }
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile) { Sort = true };
         }
 
