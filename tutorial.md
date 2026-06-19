@@ -38,9 +38,9 @@ Implementing data sources is split into three parts:
 
 ## Part 2: Setup Downloading/Processing Script
   1. Create one of the following files to download/process your data:
-  * Python: [`process.py`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/process.sample.py)
-  * Bash: [`process.sh`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/process.sample.sh)
-  * Jupyter Notebook: [`process.ipynb`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/process.sample.ipynb)
+  * Python: [`process.py`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/DataProcessing/process.sample.py)
+  * Bash: [`process.sh`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/DataProcessing/process.sample.sh)
+  * Jupyter Notebook: [`process.ipynb`](https://github.com/QuantConnect/Lean.DataSource.SDK/blob/master/DataProcessing/process.sample.ipynb)
 
   2. In `process.*`, output your processed/final data to: `/temp-output-directory/alternative/{{vendorName}}/{{dataSourceName}}/`
   * Replace `{{vendorName}}` with your vendor name (e.g. `quantconnect`)
